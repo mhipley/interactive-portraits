@@ -1,12 +1,34 @@
-var canvas = document.getElementById('canvas');
+// get portraits from JSON
+var portraits = (function() {
+  var portaits = null;
+  $.ajax({
+    'async': false,
+    'global': false,
+    'url': "portraits.json",
+    'dataType': "json",
+    'success': function(data) {
+      portraits = data;
+    }
+  });
+  return portraits;
+})();
+
+console.log(portraits);
+
 var width = window.innerWidth;
 var height = window.innerHeight;
 var yDiff = height * .1;
 var xDiff = width * .1;
-console.log(canvas.height);
+
+// function to scale raster based on viewport size
+function resizeImg(image) {
+    var width = canvas.height; 
+    var scale = (height / image.bounds.height) * 0.75;
+    image.scale(scale);
+}
+
 
 // Create a raster for the revealed image.
-
 var rasterReveal = new Raster({
     source: '/img/Zumak2.jpg',
     position: view.center,
@@ -18,12 +40,6 @@ var rasterReveal = new Raster({
 // Move the raster to the center of the view
 rasterReveal.position = view.center;
 
-// function to scale raster based on viewport size
-function resizeImg(image) {
-    var width = canvas.height; 
-    var scale = (height / image.bounds.height) * 0.75;
-    image.scale(scale);
-}
 
 // Create a raster for the initial image.
 var rasterInit = new Raster('image1');

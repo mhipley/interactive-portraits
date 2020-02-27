@@ -1,0 +1,18 @@
+{
+   "portraits": [
+	
+      {
+         "id":"01",
+         "initUrl": "/img/Zumak1.jpg",
+         "revealUrl": "/img/Zumak2.jpg",
+         "caption": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque facilisis dignissim tellus sed blandit. Phasellus nibh nunc, suscipit at venenatis sed, ultricies sit amet justo. Vivamus sagittis in erat ac vehicula. Fusce pharetra magna et faucibus vulputate. Vivamus elementum gravida augue et laoreet."
+      },
+	
+      {
+         "id":"02",
+         "initUrl": "/img/test1.jpg",
+         "revealUrl": "/img/test2.jp",
+         "caption": "Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; Fusce sit amet purus vulputate nisi vestibulum tempus. Mauris ut iaculis mi. Integer in eros lobortis, porttitor purus et, sagittis felis. Duis libero turpis, tristique quis augue vitae, congue semper diam. Aenean aliquam nibh viverra orci lobortis, et volutpat nisl ornare."
+      }
+   ]
+}
