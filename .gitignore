@@ -1,0 +1,7 @@
+node_modules/
+package-lock.json
+server.js
+styles.scss
+styles.css.map
+.DS_store
+.sass-cache
