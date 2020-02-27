@@ -1,6 +1,9 @@
 html {
   width: 100vw;
-  height: 100vh; }
+  height: 100vh;
+  background-color: #fffffc;
+  background-image: url("https://www.transparenttextures.com/patterns/concrete-wall.png");
+  /* This is mostly intended for prototyping; please download the pattern and re-host for production environments. Thank you! */ }
 
 body {
   width: 100%;
