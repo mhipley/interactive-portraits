@@ -1,3 +1,5 @@
+
+
 // get portraits from JSON
 var portraits = (function() {
   var portaits = null;
@@ -13,7 +15,6 @@ var portraits = (function() {
   return portraits;
 })();
 
-console.log(portraits);
 
 var width = window.innerWidth;
 var height = window.innerHeight;
@@ -22,10 +23,7 @@ var xDiff = width * .1;
 
 // function to scale raster based on viewport size
 function resizeImg(image) {
-    console.log(height);
-    console.log(image.bounds.height);
     var scale = (height * .75) / image.bounds.height;
-    console.log(scale);
     image.scale(scale);
 }
 
@@ -51,14 +49,6 @@ rasterReveal.on('load', function() {
       shadowOffset: new Point(15, 20)
     };
 
-    //box for image mask
-    var boundingBox = new Path.Rectangle({
-      position: view.center,
-      size: [rasterReveal.bounds.width, rasterReveal.bounds.height],
-      strokeColor: "red",
-      strokeWidth: 5,
-  });
-
 
 });
 
@@ -70,28 +60,78 @@ var rasterInit = new Raster({
 });
 
 rasterInit.on('load', function() {
-    resizeImg(rasterInit);
+  resizeImg(rasterInit);
+
+  //box for image mask
+  var boundA = new Path.Rectangle({
+    position: view.center,
+    size: [rasterReveal.bounds.width, rasterReveal.bounds.height],
+    strokeColor: "hotpink",
+    strokeWidth: 1,
+  });
+
+  bisectBounding(boundA);
+
+  var path;
+
+  // Only execute onMouseDrag when the mouse
+  // has moved at least 50 points:
+  tool.minDistance = 50;
+
+  tool.onMouseDown = function(event) {
+      // Create a new path every time the mouse is clicked
+      path = new Path();
+      path.add(event.point);
+      path.strokeColor = 'hotpink';
+      path.strokeWidth = 5;
+  }
+
+  tool.onMouseDrag = function(event) {
+      // Add a point to the path every time the mouse is dragged
+      path.add(event.point);
+  }
+
+  var circleA = new Path.Circle({
+      center: view.center,
+      radius: 10,
+      fillColor: 'red'
+  });
+
+  var circleB = new Path.Circle({
+      center: view.center,
+      radius: 10,
+      fillColor: 'red'
+  });
+
+  tool.onMouseUp = function(event) {
+    console.log(path);
+    console.log(boundA);
+    var entryPoint = boundA.getNearestPoint(path.firstSegment.point);
+    console.log(path.firstSegment.point);
+    var exitPoint = boundA.getNearestPoint(event.point);
+    circleA.position = entryPoint;
+    circleB.position = exitPoint;
+
+  }
+
 });
 
+var actionPath;
+// var result;
 
+
+
+function bisectBounding(boundingBox) {
+  var boundB = boundingBox.clone();
+  boundB.style = {
+    strokeColor: "blue",
+  }
+}
 
 
 
 // var circle = new Path.Circle(new Point(80, 50), 200);
 // circle.position = view.center;
-
-// var myPath;
-// var result;
-
-// function onMouseDown(event) {
-//     myPath = new Path();
-//     myPath.strokeColor = 'red';
-// }
-
-// function onMouseDrag(event) {
-//     myPath.add(event.point);
-
-// }
 
 
 
