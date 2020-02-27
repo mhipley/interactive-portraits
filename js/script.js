@@ -22,40 +22,59 @@ var xDiff = width * .1;
 
 // function to scale raster based on viewport size
 function resizeImg(image) {
-    var width = canvas.height; 
-    var scale = (height / image.bounds.height) * 0.75;
+    console.log(height);
+    console.log(image.bounds.height);
+    var scale = (height * .75) / image.bounds.height;
+    console.log(scale);
     image.scale(scale);
 }
 
+function pickRandomPortrait(){
+        var obj_keys = Object.keys(portraits.portraits);
+        var ran_key = obj_keys[Math.floor(Math.random() *obj_keys.length)];
+        portrait = portraits.portraits[ran_key];
+}
+
+pickRandomPortrait();
 
 // Create a raster for the revealed image.
 var rasterReveal = new Raster({
-    source: '/img/Zumak2.jpg',
-    position: view.center,
-    shadowColor: new Color(0, 0, 0, .5),
-    shadowBlur: 80,
-    shadowOffset: new Point(15, 20)
+  source: portrait.revealUrl,
+  position: view.center
 });
 
-// Move the raster to the center of the view
-rasterReveal.position = view.center;
+rasterReveal.on('load', function() {
+    resizeImg(rasterReveal);
+    rasterReveal.style = {
+      shadowColor: new Color(0, 0, 0, .5),
+      shadowBlur: 80,
+      shadowOffset: new Point(15, 20)
+    };
+
+    //box for image mask
+    var boundingBox = new Path.Rectangle({
+      position: view.center,
+      size: [rasterReveal.bounds.width, rasterReveal.bounds.height],
+      strokeColor: "red",
+      strokeWidth: 5,
+  });
 
 
-// Create a raster for the initial image.
-var rasterInit = new Raster('image1');
-
-// Move the raster to the center of the view
-rasterInit.position = view.center;
+});
 
 
-resizeImg(rasterReveal);
-resizeImg(rasterInit);
+// // Create a raster for the initial image.
+var rasterInit = new Raster({
+  source: portrait.initUrl,
+  position: view.center
+});
+
+rasterInit.on('load', function() {
+    resizeImg(rasterInit);
+});
 
 
-// var square = new Path.Rectangle({
-//     position: view.center,
-//     size: 1000,
-// });
+
 
 
 // var circle = new Path.Circle(new Point(80, 50), 200);
