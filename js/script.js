@@ -5,34 +5,35 @@ var yDiff = height * .1;
 var xDiff = width * .1;
 console.log(canvas.height);
 
-// Create a raster item using the image tag with id='mona'
-var raster = new Raster('image2');
+// Create a raster for the revealed image.
+
+var rasterReveal = new Raster({
+    source: '/img/Zumak2.jpg',
+    position: view.center,
+    shadowColor: new Color(0, 0, 0, .5),
+    shadowBlur: 80,
+    shadowOffset: new Point(15, 20)
+});
 
 // Move the raster to the center of the view
-raster.position = view.center;
+rasterReveal.position = view.center;
 
-// function to scale raster based on view
+// function to scale raster based on viewport size
 function resizeImg(image) {
     var width = canvas.height; 
     var scale = (height / image.bounds.height) * 0.75;
     image.scale(scale);
 }
 
-// // Scale the raster by 50%
-// raster.scale(0.2)
-
-
-// Create a raster item using the image tag with id='mona'
-var raster2 = new Raster('image1');
+// Create a raster for the initial image.
+var rasterInit = new Raster('image1');
 
 // Move the raster to the center of the view
-raster2.position = view.center;
+rasterInit.position = view.center;
 
-// // Scale the raster by 50%
-// raster2.scale(0.2);
 
-resizeImg(raster);
-resizeImg(raster2);
+resizeImg(rasterReveal);
+resizeImg(rasterInit);
 
 
 // var square = new Path.Rectangle({
