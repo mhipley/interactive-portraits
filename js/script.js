@@ -91,26 +91,28 @@ rasterInit.on('load', function() {
       path.add(event.point);
   }
 
-  var circleA = new Path.Circle({
-      center: view.center,
-      radius: 10,
-      fillColor: 'red'
-  });
-
-  var circleB = new Path.Circle({
-      center: view.center,
-      radius: 10,
-      fillColor: 'red'
-  });
-
   tool.onMouseUp = function(event) {
-    console.log(path);
-    console.log(boundA);
     var entryPoint = boundA.getNearestPoint(path.firstSegment.point);
-    console.log(path.firstSegment.point);
     var exitPoint = boundA.getNearestPoint(event.point);
-    circleA.position = entryPoint;
-    circleB.position = exitPoint;
+
+    var intersections = boundA.getCrossings(path);
+
+    if (intersections === undefined || intersections.length == 0){
+      path.insert(0, entryPoint);
+      path.add(exitPoint);
+    }
+
+    else{
+      console.log(intersections[0].point.x);
+      console.log(boundA);
+      newPath = path.intersect(boundA, {trace: false});
+      newPath.strokeColor = 'green';
+      var newEntryPoint = boundA.getNearestPoint(newPath.firstSegment.point);
+      var newExitPoint = boundA.getNearestPoint(newPath.lastSegment.point);     
+      newPath.insert(0, newEntryPoint);
+      newPath.add(newExitPoint);
+      path.remove();
+    }
 
   }
 
