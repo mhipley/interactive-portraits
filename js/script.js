@@ -1,5 +1,4 @@
 
-
 // get portraits from JSON
 var portraits = (function() {
   var portaits = null;
@@ -52,7 +51,6 @@ rasterReveal.on('load', function() {
 
 });
 
-
 // // Create a raster for the initial image.
 var rasterInit = new Raster({
   source: portrait.initUrl,
@@ -66,13 +64,14 @@ rasterInit.on('load', function() {
   var boundA = new Path.Rectangle({
     position: view.center,
     size: [rasterReveal.bounds.width, rasterReveal.bounds.height],
-    strokeColor: "hotpink",
-    strokeWidth: 1,
+    strokeColor: "#39FF14",
+    strokeWidth: 2,
+    fillColor: new Color(1, 0, 0.5, 0.3),
+
   });
 
-  bisectBounding(boundA);
-
   var path;
+  var newPath;
 
   // Only execute onMouseDrag when the mouse
   // has moved at least 50 points:
@@ -80,9 +79,14 @@ rasterInit.on('load', function() {
 
   tool.onMouseDown = function(event) {
       // Create a new path every time the mouse is clicked
+
+      if (path !== undefined) {
+        path.removeSegments();
+      }
+   
       path = new Path();
       path.add(event.point);
-      path.strokeColor = 'hotpink';
+      path.strokeColor = '#39FF14';
       path.strokeWidth = 5;
   }
 
@@ -103,16 +107,30 @@ rasterInit.on('load', function() {
     }
 
     else{
-      console.log(intersections[0].point.x);
-      console.log(boundA);
       newPath = path.intersect(boundA, {trace: false});
-      newPath.strokeColor = 'green';
       var newEntryPoint = boundA.getNearestPoint(newPath.firstSegment.point);
       var newExitPoint = boundA.getNearestPoint(newPath.lastSegment.point);     
       newPath.insert(0, newEntryPoint);
       newPath.add(newExitPoint);
-      path.remove();
+      path.removeSegments();
+      path.addSegments(newPath.segments);
+      newPath.remove();
     }
+
+    function bisect(path, shape) {
+      path.strokeCap = 'square';
+      var newShape = shape.divide(path, { stroke: true });
+      var boundingIntersections = boundA.getCrossings(path);
+      console.log(boundingIntersections);
+      newShape.translate(30, 0);
+      newShape.selected = true;
+      newShape.strokeColor = null;
+
+    }
+
+
+    bisect(path, boundA);
+
 
   }
 
@@ -121,14 +139,12 @@ rasterInit.on('load', function() {
 var actionPath;
 // var result;
 
-
-
-function bisectBounding(boundingBox) {
-  var boundB = boundingBox.clone();
-  boundB.style = {
-    strokeColor: "blue",
-  }
-}
+// function bisectBounding(boundingBox) {
+//   var boundB = boundingBox.clone();
+//   boundB.style = {
+//     strokeColor: "blue",
+//   }
+// }
 
 
 
