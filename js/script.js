@@ -64,9 +64,6 @@ rasterInit.on('load', function() {
   var boundA = new Path.Rectangle({
     position: view.center,
     size: [rasterReveal.bounds.width, rasterReveal.bounds.height],
-    strokeColor: "#39FF14",
-    strokeWidth: 2,
-    fillColor: new Color(1, 0, 0.5, 0.3),
 
   });
 
@@ -96,8 +93,9 @@ rasterInit.on('load', function() {
   }
 
   tool.onMouseUp = function(event) {
-    var entryPoint = boundA.getNearestPoint(path.firstSegment.point);
-    var exitPoint = boundA.getNearestPoint(event.point);
+
+    var entryPoint = boundA.getNearestLocation(path.firstSegment.point);
+    var exitPoint = boundA.getNearestLocation(event.point);
 
     var intersections = boundA.getCrossings(path);
 
@@ -108,8 +106,8 @@ rasterInit.on('load', function() {
 
     else{
       newPath = path.intersect(boundA, {trace: false});
-      var newEntryPoint = boundA.getNearestPoint(newPath.firstSegment.point);
-      var newExitPoint = boundA.getNearestPoint(newPath.lastSegment.point);     
+      var newEntryPoint = boundA.getNearestLocation(newPath.firstSegment.point);
+      var newExitPoint = boundA.getNearestLocation(newPath.lastSegment.point);     
       newPath.insert(0, newEntryPoint);
       newPath.add(newExitPoint);
       path.removeSegments();
@@ -117,19 +115,43 @@ rasterInit.on('load', function() {
       newPath.remove();
     }
 
-    function bisect(path, shape) {
-      path.strokeCap = 'square';
-      var newShape = shape.divide(path, { stroke: true });
-      var boundingIntersections = boundA.getCrossings(path);
-      console.log(boundingIntersections);
-      newShape.translate(30, 0);
-      newShape.selected = true;
-      newShape.strokeColor = null;
+
+
+    if (path.isInside(boundA.bounds) === true) {
+
+      var boundingIntersections = boundA.getIntersections(path);
+
+      var locationA = boundA.getNearestLocation(boundingIntersections[0].point);
+      var locationB = boundA.getNearestLocation(boundingIntersections[1].point);
+
+      var pathB = path.clone();
+
+      boundA.splitAt(locationA);
+      boundB = boundA.splitAt(locationB);
+
+      boundA.join(path);
+      boundB.join(pathB);
+
+      var initClone = rasterInit.clone();
+
+      var groupA = new Group({
+          children: [boundA, rasterInit],
+          clipped: true
+      });
+
+      var groupB = new Group({
+          children: [boundB, initClone],
+          clipped: true
+      });  
+
+      groupA.translate(100, 0);
+      groupB.translate(-100, 0);    
 
     }
 
-
-    bisect(path, boundA);
+    else {
+      path.removeSegments();
+    }
 
 
   }
