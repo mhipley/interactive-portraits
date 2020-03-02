@@ -68,84 +68,131 @@ rasterInit.on('load', function() {
   });
 
   var path;
+  var edge;
   var newPath;
+  var line;
 
-  // Only execute onMouseDrag when the mouse
-  // has moved at least 50 points:
-  tool.minDistance = 50;
+  tool.minDistance = 8;
+  tool.maxDistance = 15;
 
   tool.onMouseDown = function(event) {
-      // Create a new path every time the mouse is clicked
-
       if (path !== undefined) {
         path.removeSegments();
       }
-   
+      if (line !== undefined) {
+        line.removeSegments();
+      }
       path = new Path();
       path.add(event.point);
-      path.strokeColor = '#39FF14';
-      path.strokeWidth = 5;
+      path.strokeColor = 'white';
+      path.strokeWidth = 2;
+
+      edge = new Path();
+      edge.add(event.point);
+      // edge.strokeColor = 'white';
+      
   }
 
   tool.onMouseDrag = function(event) {
       // Add a point to the path every time the mouse is dragged
       path.add(event.point);
+
+
+      var step = event.delta;
+      step.angle += 90;
+
+      var top = event.middlePoint + step;
+      var bottom = event.middlePoint - step;
+
+      line = new Path();
+      line.add(top);
+      line.add(bottom);
+
+      edge.add(top);
+      edge.insert(0, bottom);
+
+
+    
+
+      edge.smooth();
+      var group = edge.divide(line);
+      edge.closed = true;
+
+      var childIndex = edge.parent.lastChild.index;
+
+
+      // edge.deselectAll;
+      // edge.parent.lastChild.strokeColor = 'hotpink';
+      // edge.parent.lastChild.strokeColor.selected = true;
+      edge.parent.children[childIndex].fillColor = {
+          gradient: {
+              stops: [['rgba(255, 255, 255, 0)', 0.0], ['rgba(255, 255, 255, .5)', 0.5], ['rgba(255, 255, 255, 0)', 1]]
+          },
+          origin: top,
+          destination: bottom
+      };
+
+      console.log(edge.parent.children[childIndex]);
+
   }
 
   tool.onMouseUp = function(event) {
 
-    var entryPoint = boundA.getNearestLocation(path.firstSegment.point);
-    var exitPoint = boundA.getNearestLocation(event.point);
+    edge.add(event.point);
+    edge.closed = true;
+    edge.smooth();
 
-    var intersections = boundA.getCrossings(path);
+    // var entryPoint = boundA.getNearestLocation(path.firstSegment.point);
+    // var exitPoint = boundA.getNearestLocation(event.point);
 
-    if (intersections === undefined || intersections.length == 0){
-      path.insert(0, entryPoint);
-      path.add(exitPoint);
-    }
+    // var intersections = boundA.getCrossings(path);
 
-    else{
-      newPath = path.intersect(boundA, {trace: false});
-      var newEntryPoint = boundA.getNearestLocation(newPath.firstSegment.point);
-      var newExitPoint = boundA.getNearestLocation(newPath.lastSegment.point);     
-      newPath.insert(0, newEntryPoint);
-      newPath.add(newExitPoint);
-      path.removeSegments();
-      path.addSegments(newPath.segments);
-      newPath.remove();
-    }
+    // if (intersections === undefined || intersections.length == 0){
+    //   path.insert(0, entryPoint);
+    //   path.add(exitPoint);
+    // }
 
+    // else{
+    //   newPath = path.intersect(boundA, {trace: false});
+    //   var newEntryPoint = boundA.getNearestLocation(newPath.firstSegment.point);
+    //   var newExitPoint = boundA.getNearestLocation(newPath.lastSegment.point);     
+    //   newPath.insert(0, newEntryPoint);
+    //   newPath.add(newExitPoint);
+    //   path.removeSegments();
+    //   path.addSegments(newPath.segments);
+    //   newPath.remove();
+    // }
 
 
     if (path.isInside(boundA.bounds) === true) {
 
-      var boundingIntersections = boundA.getIntersections(path);
+      // var boundingIntersections = boundA.getIntersections(path);
 
-      var locationA = boundA.getNearestLocation(boundingIntersections[0].point);
-      var locationB = boundA.getNearestLocation(boundingIntersections[1].point);
+      // var locationA = boundA.getNearestLocation(boundingIntersections[0].point);
+      // var locationB = boundA.getNearestLocation(boundingIntersections[1].point);
 
-      var pathB = path.clone();
+      // var pathB = path.clone();
 
-      boundA.splitAt(locationA);
-      boundB = boundA.splitAt(locationB);
+      // boundA.splitAt(locationA);
+      // boundB = boundA.splitAt(locationB);
 
-      boundA.join(path);
-      boundB.join(pathB);
+      // boundA.join(path);
+      // boundB.join(pathB);
 
-      var initClone = rasterInit.clone();
+      // var initClone = rasterInit.clone();
 
-      var groupA = new Group({
-          children: [boundA, rasterInit],
-          clipped: true
-      });
+      // var groupA = new Group({
+      //     children: [boundA, rasterInit],
+      //     clipped: true
+      // });
 
-      var groupB = new Group({
-          children: [boundB, initClone],
-          clipped: true
-      });  
+      // var groupB = new Group({
+      //     children: [boundB, initClone],
+      //     clipped: true
+      // });  
 
-      groupA.translate(100, 0);
-      groupB.translate(-100, 0);    
+      // groupA.translate(100, -100);
+      // groupB.translate(-100, 100);    
 
     }
 
