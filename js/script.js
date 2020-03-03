@@ -72,7 +72,7 @@ rasterInit.on('load', function() {
   var newPath;
   var line;
 
-  tool.minDistance = 8;
+  tool.minDistance = 4;
   tool.maxDistance = 15;
 
   tool.onMouseDown = function(event) {
@@ -90,13 +90,13 @@ rasterInit.on('load', function() {
       edge = new Path();
       edge.add(event.point);
       // edge.strokeColor = 'white';
+      edge.fillColor = 'white';
       
   }
 
   tool.onMouseDrag = function(event) {
       // Add a point to the path every time the mouse is dragged
       path.add(event.point);
-
 
       var step = event.delta;
       step.angle += 90;
@@ -112,93 +112,171 @@ rasterInit.on('load', function() {
       edge.insert(0, bottom);
 
 
-    
-
-      edge.smooth();
-      var group = edge.divide(line);
-      edge.closed = true;
-
       var childIndex = edge.parent.lastChild.index;
 
 
       // edge.deselectAll;
       // edge.parent.lastChild.strokeColor = 'hotpink';
       // edge.parent.lastChild.strokeColor.selected = true;
-      edge.parent.children[childIndex].fillColor = {
-          gradient: {
-              stops: [['rgba(255, 255, 255, 0)', 0.0], ['rgba(255, 255, 255, .5)', 0.5], ['rgba(255, 255, 255, 0)', 1]]
-          },
-          origin: top,
-          destination: bottom
-      };
+      // edge.parent.children[childIndex].fillColor = {
+      //     gradient: {
+      //         stops: [['rgba(255, 255, 255, 0)', 0.0], ['rgba(255, 255, 255, .5)', 0.5], ['rgba(255, 255, 255, 0)', 1]]
+      //     },
+      //     origin: top,
+      //     destination: bottom
+      // };
 
-      console.log(edge.parent.children[childIndex]);
 
   }
 
   tool.onMouseUp = function(event) {
 
-    edge.add(event.point);
-    edge.closed = true;
-    edge.smooth();
+    var entryPoint = boundA.getNearestLocation(path.firstSegment.point);
+    var exitPoint = boundA.getNearestLocation(event.point);
 
-    // var entryPoint = boundA.getNearestLocation(path.firstSegment.point);
-    // var exitPoint = boundA.getNearestLocation(event.point);
+    var intersections = boundA.getCrossings(path);
 
-    // var intersections = boundA.getCrossings(path);
+    if (intersections === undefined || intersections.length == 0){
 
-    // if (intersections === undefined || intersections.length == 0){
-    //   path.insert(0, entryPoint);
-    //   path.add(exitPoint);
-    // }
+      path.insert(0, entryPoint);
+      path.add(exitPoint);
 
-    // else{
-    //   newPath = path.intersect(boundA, {trace: false});
-    //   var newEntryPoint = boundA.getNearestLocation(newPath.firstSegment.point);
-    //   var newExitPoint = boundA.getNearestLocation(newPath.lastSegment.point);     
-    //   newPath.insert(0, newEntryPoint);
-    //   newPath.add(newExitPoint);
-    //   path.removeSegments();
-    //   path.addSegments(newPath.segments);
-    //   newPath.remove();
-    // }
+ 
+      edge.closed = true;
+      // edge.smooth();
+
+      edgeB = edge.clone();
+    }
+
+    else{
+      newPath = path.intersect(boundA, {trace: false});
+      var newEntryPoint = boundA.getNearestLocation(newPath.firstSegment.point);
+      var newExitPoint = boundA.getNearestLocation(newPath.lastSegment.point);     
+      newPath.insert(0, newEntryPoint);
+      newPath.add(newExitPoint);
+      path.removeSegments();
+      path.addSegments(newPath.segments);
+      newPath.remove();
+
+
+
+
+
+      edge.closed = true;
+      // edge.smooth();
+
+      edgeB = edge.clone();
+
+    }
 
 
     if (path.isInside(boundA.bounds) === true) {
 
-      // var boundingIntersections = boundA.getIntersections(path);
+      // var textureEdge = path.clone();
+      // textureEdge.strokeColor = 'hotpink';
+      // textureEdge.flatten(150);
+      // textureEdge.selected = true;
 
-      // var locationA = boundA.getNearestLocation(boundingIntersections[0].point);
-      // var locationB = boundA.getNearestLocation(boundingIntersections[1].point);
+      // path.strokeColor = 'hotpink';
 
-      // var pathB = path.clone();
+      var textures = new Group();
 
-      // boundA.splitAt(locationA);
-      // boundB = boundA.splitAt(locationB);
+      var texturesNo = Math.round(path.length / 40);
 
-      // boundA.join(path);
-      // boundB.join(pathB);
+      console.log(texturesNo);     
 
-      // var initClone = rasterInit.clone();
+      // function drawSquares(path, texturesNo) {
 
-      // var groupA = new Group({
-      //     children: [boundA, rasterInit],
-      //     clipped: true
-      // });
+      //   var i;
 
-      // var groupB = new Group({
-      //     children: [boundB, initClone],
-      //     clipped: true
-      // });  
+      //   for (i = 0; i < texturesNo; i++) {
 
-      // groupA.translate(100, -100);
-      // groupB.translate(-100, 100);    
+      //     var location = path.getLocationAt(40*i);
+
+      //     var rectangle = new Shape.Rectangle({
+      //       point: [(location.segment.point.x - 50), (location.segment.point.y - 50)],
+      //       size: [100, 100],
+      //     });
+      //     rectangle.strokeColor = 'hotpink';
+      //     // var rotation = - location.segment.point.angle / 2;
+
+      //     // console.log(rotation);
+
+      //     // rectangle.rotate(rotation);
+      //     textures.addChild(rectangle);
+
+      //     i++;
+
+      //     // var texture = new Raster({
+      //     //   source: 'img/textures/edge-tile-1.png',
+      //     //   size: [100, 100],
+      //     //   position: [(location.segment.point.x - 50), (location.segment.point.y - 50)],
+      //     //   rotation: 180 - rotation
+      //     // });
+
+      //     // textures.addChild(texture);
+
+      //   }
+
+
+      // }
+
+      //   drawSquares(path, texturesNo);
+
+
+        // var rectangle = new Shape.Rectangle({
+        //   point: [(segment.point.x - 50), (segment.point.y - 50)],
+        //   size: [100, 100],
+        // });
+        // rectangle.strokeColor = 'hotpink';
+
+        // var rotation = segment.point.angle += 90;
+
+        // rectangle.rotate(rotation);
+
+        // textures.addChild(rectangle);
+
+      
+
+      var boundingIntersections = boundA.getIntersections(path);
+
+      var locationA = boundA.getNearestLocation(boundingIntersections[0].point);
+      var locationB = boundA.getNearestLocation(boundingIntersections[1].point);
+
+      var pathB = path.clone();
+
+      boundA.splitAt(locationA);
+      boundB = boundA.splitAt(locationB);
+
+      boundA.join(path);
+      boundB.join(pathB);
+
+      var initClone = rasterInit.clone();
+
+      var groupA = new Group({
+          children: [boundA, rasterInit],
+          clipped: true
+      });
+
+      var groupB = new Group({
+          children: [boundB, initClone],
+          clipped: true
+      });  
+
+      // textures.translate(100, -100).bringToFront();
+
+      groupA.translate(100, -100).bringToFront();
+      edge.translate(100, -100).bringToFront();
+      groupB.translate(-100, 100); 
+      edgeB.translate(-100, 100).bringToFront();   
+
 
     }
 
     else {
       path.removeSegments();
     }
+
 
 
   }
