@@ -108,7 +108,7 @@ rasterInit.on('load', function() {
 
       edge = new Path();
       edge.add(event.point);
-      // edge.fillColor = 'white';
+      edge.fillColor = 'white';
 
       secondaryEdge = edge.clone();
 
@@ -137,10 +137,6 @@ rasterInit.on('load', function() {
 
       var secondaryTop = event.middlePoint + offsetPoint + step;
       var secondaryBottom = event.middlePoint + offsetPoint - step;
-
-      // line = new Path();
-      // line.add(top);
-      // line.add(bottom);
 
       edge.add(top);
       edge.insert(0, bottom);
@@ -177,6 +173,7 @@ rasterInit.on('load', function() {
 
     var intersections = mask.getCrossings(path);
 
+    // path is entirely contained within mask bounds:
     if (intersections === undefined || intersections.length == 0){
 
       path.insert(0, entryPoint);
@@ -190,12 +187,18 @@ rasterInit.on('load', function() {
       joinPath.add(exitPoint);
  
       // still need to close these to the edge
+      // edge.insert(0, entryPoint);
+      edge.add(exitPoint);
       edge.closed = true;
+
+      // secondaryEdge.insert(0, secondaryEntryPoint);
+      secondaryEdge.add(secondaryExitPoint);
       secondaryEdge.closed = true;
       // edge.smooth();
 
     }
 
+    // if path begins or ends outside of the mask bounds
     else{
       newPath = path.intersect(mask, {trace: false});
       secondaryNewPath = secondaryPath.intersect(mask, {trace: false});
@@ -221,8 +224,8 @@ rasterInit.on('load', function() {
       secondaryNewPath.remove();
 
       joinPath = secondaryPath.clone();
-      joinPath.insert(0, newSecondaryEntryPoint);
-      joinPath.add(newSecondayExitPoint);
+      joinPath.insert(0, newEntryPoint);
+      joinPath.add(newExitPoint);
 
       edge.closed = true;
       secondaryEdge.closed = true;
@@ -245,7 +248,7 @@ rasterInit.on('load', function() {
       //path length doesn't seem to be accurate when line is completed on mouseUp
       var texturesNo = Math.round(path.length / 15);
 
-      function drawSquares(path, texturesNo) {
+      function drawSquares(path, texturesNo, primary) {
         var i;
 
         for (i = 0; i < texturesNo; i++) {
@@ -275,8 +278,18 @@ rasterInit.on('load', function() {
 
           tile.scale(40/300);
 
-          marker.rotate(tangent.angle);
-          tile.rotate(180 + tangent.angle);
+
+          if (primary === true) {
+            marker.rotate(tangent.angle);
+            tile.rotate(tangent.angle);
+          }
+          
+          else {
+            tile.rotation = 180;
+            marker.rotate(tangent.angle);
+            tile.rotate(tangent.angle);
+            console.log("right side");
+          }
 
           textures.addChild(marker);
           textures.addChild(tile);
@@ -287,9 +300,11 @@ rasterInit.on('load', function() {
 
       }
 
+      drawSquares(path, texturesNo, true);
+      drawSquares(secondaryPath, texturesNo, false);
+
       var clipPath = path.clone();
       clipPath.join(joinPath);
-      clipPath.selected = true;
 
       var clippedMask = new Group({
           children: [clipPath, mask],
@@ -299,9 +314,15 @@ rasterInit.on('load', function() {
       var clippedGroup = new Group({
           children: [clippedMask, rasterInit],
           clipped: true
-      });      
+      }); 
 
-      // drawSquares(path, texturesNo);
+      textures.bringToFront();
+      clippedGroup.bringToFront(); 
+      edge.bringToFront();   
+      secondaryEdge.bringToFront(); 
+
+
+      
       
       // var boundingIntersections = mask.getIntersections(path);
       // var secondaryBoundingIntersections = mask.getIntersections(secondaryPath);
