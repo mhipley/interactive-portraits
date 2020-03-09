@@ -76,7 +76,7 @@ rasterInit.on('load', function() {
   tool.maxDistance = 10;
 
   var maxStripWidth = rasterReveal.size.width - 100;
-  var minStripWidth = (rasterReveal.size.width - 100)/4;
+  var minStripWidth = (rasterReveal.size.width - 100)/2;
 
   function getStripWidth(min, max) {
     min = Math.ceil(min);
@@ -184,6 +184,10 @@ rasterInit.on('load', function() {
 
       secondaryPath.insert(0, secondaryEntryPoint);
       secondaryPath.add(secondaryExitPoint);
+
+      joinPath = secondaryPath.clone();
+      joinPath.insert(0, entryPoint);
+      joinPath.add(exitPoint);
  
       // still need to close these to the edge
       edge.closed = true;
@@ -192,7 +196,6 @@ rasterInit.on('load', function() {
 
     }
 
-    //this is for if a line crosses the edge, BUGGY
     else{
       newPath = path.intersect(mask, {trace: false});
       secondaryNewPath = secondaryPath.intersect(mask, {trace: false});
@@ -216,6 +219,10 @@ rasterInit.on('load', function() {
       secondaryPath.removeSegments();
       secondaryPath.addSegments(secondaryNewPath.segments);
       secondaryNewPath.remove();
+
+      joinPath = secondaryPath.clone();
+      joinPath.insert(0, newSecondaryEntryPoint);
+      joinPath.add(newSecondayExitPoint);
 
       edge.closed = true;
       secondaryEdge.closed = true;
@@ -279,6 +286,11 @@ rasterInit.on('load', function() {
         }
 
       }
+
+      path.join(joinPath);
+      path.selected = true;
+      path.strokeColor = 'hotpink';
+      console.log(path);
 
       // drawSquares(path, texturesNo);
       
