@@ -60,7 +60,7 @@ rasterInit.on('load', function() {
   resizeImg(rasterInit);
 
   //box for image mask
-  var boundA = new Path.Rectangle({
+  var mask = new Path.Rectangle({
     position: view.center,
     size: [rasterReveal.bounds.width, rasterReveal.bounds.height],
 
@@ -68,8 +68,9 @@ rasterInit.on('load', function() {
 
   var path;
   var edge;
-  var newPath;
-  var line;
+  var secondaryPath;
+  var secondaryEdge;
+  // var line;
 
   tool.minDistance = 2;
   tool.maxDistance = 10;
@@ -85,27 +86,35 @@ rasterInit.on('load', function() {
 
   var stripWidth = getStripWidth(minStripWidth, maxStripWidth);
   var offset = stripWidth/2;
+  var offsetPoint = new Point(offset, 0);
 
   tool.onMouseDown = function(event) {
 
       if (path !== undefined) {
         path.removeSegments();
       }
-      if (line !== undefined) {
-        line.removeSegments();
-      }
+      // if (line !== undefined) {
+      //   line.removeSegments();
+      // }
+
       path = new Path();
       path.add(event.point);
-      path.strokeColor = 'white';
-      path.strokeWidth = 2;
+      path.strokeColor = '#ff9900';
+
+      secondaryPath = path.clone();
+      secondaryPath.strokeColor = 'hotpink';
       
-      path.translate(offset, 0);
+      secondaryPath.translate(offset, 0);
 
       edge = new Path();
       edge.add(event.point);
-      // edge.strokeColor = 'hotpink';
-      edge.fillColor = 'white';
-      edge.translate(offset, 0);
+      // edge.fillColor = 'white';
+
+      secondaryEdge = edge.clone();
+
+      secondaryEdge.translate(offset, 0);
+
+
 
       
   }
@@ -114,32 +123,32 @@ rasterInit.on('load', function() {
 
   tool.onMouseDrag = function(event) {
       // Add a point to the path every time the mouse is dragged
-      console.log(event.point);
-
-      var offsetPoint = new Point(offset, 0);
 
       var result = event.point + offsetPoint;
 
-      path.add(result);
+      path.add(event.point);
+      secondaryPath.add(result);
 
       var step = event.delta;
       step.angle += 90;
 
-      var top = event.middlePoint + offsetPoint + step;
-      var bottom = event.middlePoint + offsetPoint - step;
+      var top = event.middlePoint + step;
+      var bottom = event.middlePoint - step;
 
-      line = new Path();
-      line.add(top);
-      line.add(bottom);
+      var secondaryTop = event.middlePoint + offsetPoint + step;
+      var secondaryBottom = event.middlePoint + offsetPoint - step;
+
+      // line = new Path();
+      // line.add(top);
+      // line.add(bottom);
 
       edge.add(top);
       edge.insert(0, bottom);
 
+      secondaryEdge.add(secondaryTop);
+      secondaryEdge.insert(0, secondaryBottom);
 
       var childIndex = edge.parent.lastChild.index;
-
-
-
 
       // edge.deselectAll;
       // edge.parent.lastChild.strokeColor = 'hotpink';
@@ -157,50 +166,72 @@ rasterInit.on('load', function() {
 
   tool.onMouseUp = function(event) {
 
-    var entryPoint = boundA.getNearestLocation(path.firstSegment.point);
-    var exitPoint = boundA.getNearestLocation(event.point);
+    var entryPoint = mask.getNearestLocation(path.firstSegment.point);
+    var exitPoint = mask.getNearestLocation(event.point);
 
-    var intersections = boundA.getCrossings(path);
+    var secondaryIn = path.firstSegment.point + offsetPoint;
+    var secondaryOut = event.point + offsetPoint;
+
+    var secondaryEntryPoint = mask.getNearestLocation(secondaryIn);
+    var secondaryExitPoint = mask.getNearestLocation(secondaryOut);    
+
+    var intersections = mask.getCrossings(path);
 
     if (intersections === undefined || intersections.length == 0){
 
       path.insert(0, entryPoint);
       path.add(exitPoint);
 
+      secondaryPath.insert(0, secondaryEntryPoint);
+      secondaryPath.add(secondaryExitPoint);
  
+      // still need to close these to the edge
       edge.closed = true;
+      secondaryEdge.closed = true;
       // edge.smooth();
 
-      edgeB = edge.clone();
     }
 
+    //this is for if a line crosses the edge, BUGGY
     else{
-      newPath = path.intersect(boundA, {trace: false});
-      var newEntryPoint = boundA.getNearestLocation(newPath.firstSegment.point);
-      var newExitPoint = boundA.getNearestLocation(newPath.lastSegment.point);     
+      newPath = path.intersect(mask, {trace: false});
+      secondaryNewPath = secondaryPath.intersect(mask, {trace: false});
+
+      var newEntryPoint = mask.getNearestLocation(newPath.firstSegment.point);
+      var newExitPoint = mask.getNearestLocation(newPath.lastSegment.point);     
+
+      var newSecondaryEntryPoint = mask.getNearestLocation(secondaryNewPath.firstSegment.point);
+      var newSecondayExitPoint = mask.getNearestLocation(secondaryNewPath.lastSegment.point);     
+
       newPath.insert(0, newEntryPoint);
       newPath.add(newExitPoint);
+
+      secondaryNewPath.insert(0, newSecondaryEntryPoint);
+      secondaryNewPath.add(newSecondayExitPoint);
+
       path.removeSegments();
       path.addSegments(newPath.segments);
       newPath.remove();
 
+      secondaryPath.removeSegments();
+      secondaryPath.addSegments(secondaryNewPath.segments);
+      secondaryNewPath.remove();
+
       edge.closed = true;
+      secondaryEdge.closed = true;
       // edge.smooth();
 
-      edgeB = edge.clone();
 
     }
 
 
-    if (path.isInside(boundA.bounds) === true) {
+
+    if (path.isInside(mask.bounds) === true) {
 
       // var textureEdge = path.clone();
       // textureEdge.strokeColor = 'hotpink';
       // textureEdge.flatten(150);
       // textureEdge.selected = true;
-
-      var clonePath = path.clone();
-      clonePath.strokeColor = 'hotpink';
 
       var textures = new Group();
 
@@ -247,49 +278,56 @@ rasterInit.on('load', function() {
 
         }
 
-
-
       }
 
-      drawSquares(path, texturesNo);
+      // drawSquares(path, texturesNo);
       
-      var boundingIntersections = boundA.getIntersections(path);
+      // var boundingIntersections = mask.getIntersections(path);
+      // var secondaryBoundingIntersections = mask.getIntersections(secondaryPath);
 
-      var locationA = boundA.getNearestLocation(boundingIntersections[0].point);
-      var locationB = boundA.getNearestLocation(boundingIntersections[1].point);
+      // var splitLocation = mask.getNearestLocation(boundingIntersections[0].point);
+      // var locationB = mask.getNearestLocation(boundingIntersections[1].point);
 
-      var pathB = path.clone();
+      // var secondarySplitLocation = mask.getNearestLocation(secondaryBoundingIntersections[0].point);
 
-      boundA.splitAt(locationA);
-      boundB = boundA.splitAt(locationB);
+      // console.log(boundingIntersections);
+      // console.log(secondaryBoundingIntersections);
+      // console.log(splitLocation);
+      // console.log(secondarySplitLocation);
+      // var secondaryLocationB = mask.getNearestLocation(secondaryBoundingIntersections[1].point);
 
-      boundA.join(path);
-      boundB.join(pathB);
+      // var pathB = path.clone();
 
-      var initClone = rasterInit.clone();
+      // mask.splitAt(splitLocation);
+      // boundB = mask.splitAt(locationB);
 
-      var groupA = new Group({
-          children: [boundA, rasterInit],
-          clipped: true
-      });
+      // mask.join(path);
+      // boundB.join(pathB);
 
-      var groupB = new Group({
-          children: [boundB, initClone],
-          clipped: true          
-      });  
+      // var initClone = rasterInit.clone();
 
-      textures.bringToFront();
-      groupA.bringToFront();
-      edge.bringToFront();
+      // var groupA = new Group({
+      //     children: [mask, rasterInit],
+      //     clipped: true
+      // });
+
+      // var groupB = new Group({
+      //     children: [boundB, initClone],
+      //     clipped: true          
+      // });  
+
+      // textures.bringToFront();
+      // groupA.bringToFront();
+      // edge.bringToFront();
       
-      groupB.bringToFront();
-      edgeB.bringToFront();   
+      // groupB.bringToFront();
 
 
     }
 
     else {
       path.removeSegments();
+      secondaryPath.removeSegments();
     }
 
 
