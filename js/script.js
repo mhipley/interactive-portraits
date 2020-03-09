@@ -287,10 +287,19 @@ rasterInit.on('load', function() {
 
       }
 
-      path.join(joinPath);
-      path.selected = true;
-      path.strokeColor = 'hotpink';
-      console.log(path);
+      var clipPath = path.clone();
+      clipPath.join(joinPath);
+      clipPath.selected = true;
+
+      var clippedMask = new Group({
+          children: [clipPath, mask],
+          clipped: true
+      });            
+
+      var clippedGroup = new Group({
+          children: [clippedMask, rasterInit],
+          clipped: true
+      });      
 
       // drawSquares(path, texturesNo);
       
