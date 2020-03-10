@@ -41,14 +41,11 @@ var rasterReveal = new Raster({
 
 rasterReveal.on('load', function() {
     resizeImg(rasterReveal);
-    rasterReveal.style = {
-      shadowColor: new Color(0, 0, 0, .5),
-      shadowBlur: 80,
-      shadowOffset: new Point(15, 20)
-    };
 
 
 });
+
+
 
 // // Create a raster for the initial image.
 var rasterInit = new Raster({
@@ -66,26 +63,40 @@ rasterInit.on('load', function() {
 
   });
 
+  //box for shadow
+  var shadowClone = mask.clone();
+  shadowClone.style = {  
+    fillColor: 'white',
+    shadowColor: new Color(0, 0, 0, .5),
+    shadowBlur: 20,
+    shadowOffset: new Point(2, 6)
+  };
+  shadowClone.sendToBack();
+
+
   var path;
   var edge;
+  var edgeRip;
   var secondaryPath;
   var secondaryEdge;
-  // var line;
+  var texturesAlt = new Group();
+  var ripTextures = new Group();
 
-  tool.minDistance = 2;
-  tool.maxDistance = 10;
+  // tool.minDistance = 5;
+  // tool.maxDistance = 20;
+  tool.fixedDistance = 30;
 
-  var maxStripWidth = rasterReveal.size.width - 100;
-  var minStripWidth = (rasterReveal.size.width - 100)/2;
+  var maxStripWidth = mask.bounds.width - 200;
+  var minStripWidth = (mask.bounds.width - 200)/2;
 
-  function getStripWidth(min, max) {
+  function getRandomInclusive(min, max) {
     min = Math.ceil(min);
     max = Math.ceil(max);
     return Math.floor(Math.random() * (max - min + 1)) + min;
   }
 
-  var stripWidth = getStripWidth(minStripWidth, maxStripWidth);
-  var offset = stripWidth/2;
+  var stripWidth = getRandomInclusive(minStripWidth, maxStripWidth);
+  var offset = stripWidth;
   var offsetPoint = new Point(offset, 0);
 
   tool.onMouseDown = function(event) {
@@ -93,29 +104,59 @@ rasterInit.on('load', function() {
       if (path !== undefined) {
         path.removeSegments();
       }
-      // if (line !== undefined) {
-      //   line.removeSegments();
-      // }
 
       path = new Path();
       path.add(event.point);
-      path.strokeColor = '#ff9900';
+      // path.strokeColor = '#ff9900';
+
+      var entryPoint = mask.getNearestLocation(event.point);
+      var secondaryIn = path.firstSegment.point + offsetPoint;
+      var secondaryEntryPoint = mask.getNearestLocation(secondaryIn);
+
+      var intersections = mask.getCrossings(path);
 
       secondaryPath = path.clone();
-      secondaryPath.strokeColor = 'hotpink';
+      // secondaryPath.strokeColor = 'hotpink';
       
       secondaryPath.translate(offset, 0);
 
+      joinPath = secondaryPath.clone();
+      // joinPath.strokeColor = 'green';
+
       edge = new Path();
       edge.add(event.point);
-      edge.fillColor = 'white';
+      edge.fillColor = '#fdfdfd';
+      // edge.strokeColor = '#ff9900';
+
+      edgeRip = new Path();
+      edgeRip.add(event.point);
+      // edgeRip.strokeColor = 'hotpink';
 
       secondaryEdge = edge.clone();
 
       secondaryEdge.translate(offset, 0);
 
+      if (intersections === undefined || intersections.length == 0){
+
+        path.insert(0, entryPoint);
+        secondaryPath.insert(0, secondaryEntryPoint);
+        secondaryPath.insert(0, entryPoint);
+      }
 
 
+      var clipPath = path.clone();
+      var joinPath = secondaryPath.clone();
+      clipPath.join(joinPath);
+
+      var clippedMask = new Group({
+          children: [clipPath, mask],
+          clipped: true
+      });            
+
+      var clippedGroup = new Group({
+          children: [clippedMask, rasterInit],
+          clipped: true
+      }); 
       
   }
 
@@ -123,7 +164,10 @@ rasterInit.on('load', function() {
 
   tool.onMouseDrag = function(event) {
       // Add a point to the path every time the mouse is dragged
-
+      var randomAddA = getRandomInclusive(5, 15);
+      var randomAddB = getRandomInclusive(5, 15);
+      var randomPointA = new Point(randomAddA, 0);
+      var randomPointB = new Point(randomAddB, 0);
       var result = event.point + offsetPoint;
 
       path.add(event.point);
@@ -132,59 +176,175 @@ rasterInit.on('load', function() {
       var step = event.delta;
       step.angle += 90;
 
-      var top = event.middlePoint + step;
-      var bottom = event.middlePoint - step;
+      var top = event.middlePoint - randomPointA - 30;
+      var bottom = event.middlePoint + 5;
 
-      var secondaryTop = event.middlePoint + offsetPoint + step;
-      var secondaryBottom = event.middlePoint + offsetPoint - step;
+      var secondaryTop = event.middlePoint + offsetPoint - 5;
+      var secondaryBottom = event.middlePoint + offsetPoint + randomPointB + 30;
 
       edge.add(top);
       edge.insert(0, bottom);
 
+      edgeRip.add(top);
+
       secondaryEdge.add(secondaryTop);
       secondaryEdge.insert(0, secondaryBottom);
+      function drawTextures(event, primary) {
 
-      var childIndex = edge.parent.lastChild.index;
+        function getRandomTileNo(max) {
+          min = Math.ceil(1);
+          max = Math.floor(max);
+          return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
 
-      // edge.deselectAll;
-      // edge.parent.lastChild.strokeColor = 'hotpink';
-      // edge.parent.lastChild.strokeColor.selected = true;
-      // edge.parent.children[childIndex].fillColor = {
-      //     gradient: {
-      //         stops: [['rgba(255, 255, 255, 0)', 0.0], ['rgba(255, 255, 255, .5)', 0.5], ['rgba(255, 255, 255, 0)', 1]]
-      //     },
-      //     origin: top,
-      //     destination: bottom
-      // };
+        var tileUrl = '/img/textures/edge-tile-' + getRandomTileNo(4) + '.png';
+        var ripTileUrl = '/img/textures/rip-tile-' + getRandomTileNo(4) + '.png';
+
+        if (primary === true) {
+          var ripPoint = event.middlePoint - randomPointA - 30;
+
+          var marker = new Shape.Rectangle({
+            point: [(event.point.x) - 20, (event.point.y) - 20],
+            size: new Size(40, 40),
+            // strokeColor: 'hotpink'
+          });
+
+          var tile = new Raster({
+            source: tileUrl,
+            position: event.point,
+            size: new Size(40, 40)
+          });   
+
+          marker.rotate(event.delta.angle);
+          tile.rotate(event.delta.angle);
 
 
+          var ripMarker = new Shape.Rectangle({
+            point: [(ripPoint.x) - 20, (ripPoint.y) - 20],
+            size: new Size(40, 40),
+            // strokeColor: 'hotpink'
+          });
+
+          var ripTile = new Raster({
+            source: ripTileUrl,
+            position: ripPoint,
+            size: new Size(40, 40)
+          }); 
+
+          ripTile.rotation = 180;
+          ripMarker.rotate(event.delta.angle);
+          ripTile.rotate(event.delta.angle);
+
+        }
+
+        else {
+          var ripPoint = event.middlePoint + offsetPoint + randomPointB + 30;
+
+          var marker = new Shape.Rectangle({
+            point: [(event.point.x) - 20 + offsetPoint.x, (event.point.y) - 20],
+            size: new Size(40, 40),
+            // strokeColor: 'hotpink'
+          });
+
+          var tile = new Raster({
+            source: tileUrl,
+            position: event.point + offsetPoint,
+            size: new Size(40, 40)
+          });   
+
+          tile.rotation = 180;
+          marker.rotate(event.delta.angle);
+          tile.rotate(event.delta.angle);
+
+          var ripMarker = new Shape.Rectangle({
+            point: [(ripPoint.x) - 20, (ripPoint.y) - 20],
+            size: new Size(40, 40),
+            // strokeColor: 'hotpink'
+          });
+
+          var ripTile = new Raster({
+            source: ripTileUrl,
+            position: ripPoint,
+            size: new Size(40, 40)
+          }); 
+
+          ripMarker.rotate(event.delta.angle);
+          ripTile.rotate(event.delta.angle);          
+
+        }  
+
+        texturesAlt.addChild(marker);
+        texturesAlt.addChild(tile);
+        ripTextures.addChild(ripMarker);
+        ripTextures.addChild(ripTile);
+        
+      }
+
+
+      drawTextures(event, true);
+      drawTextures(event, false);
+
+
+
+      var clipPath = path.clone();
+      var joinPath = secondaryPath.clone();
+      clipPath.join(joinPath);
+
+      var clippedMask = new Group({
+          children: [clipPath, mask],
+          clipped: true
+      });            
+
+      var clippedGroup = new Group({
+          children: [clippedMask, rasterInit],
+          clipped: true
+      });
+
+      clippedGroup.bringToFront(); 
+      edge.bringToFront();   
+      secondaryEdge.bringToFront(); 
+      ripTextures.bringToFront();
+      edgeRip.bringToFront();
+      
   }
 
   tool.onMouseUp = function(event) {
 
-    var entryPoint = mask.getNearestLocation(path.firstSegment.point);
+
     var exitPoint = mask.getNearestLocation(event.point);
 
-    var secondaryIn = path.firstSegment.point + offsetPoint;
     var secondaryOut = event.point + offsetPoint;
 
-    var secondaryEntryPoint = mask.getNearestLocation(secondaryIn);
     var secondaryExitPoint = mask.getNearestLocation(secondaryOut);    
-
     var intersections = mask.getCrossings(path);
 
     // path is entirely contained within mask bounds:
     if (intersections === undefined || intersections.length == 0){
 
-      path.insert(0, entryPoint);
       path.add(exitPoint);
 
-      secondaryPath.insert(0, secondaryEntryPoint);
       secondaryPath.add(secondaryExitPoint);
 
-      joinPath = secondaryPath.clone();
-      joinPath.insert(0, entryPoint);
-      joinPath.add(exitPoint);
+      var clipPath = path.clone();
+      var joinPath = secondaryPath.clone();
+      clipPath.join(joinPath);
+
+      var clippedMask = new Group({
+          children: [clipPath, mask],
+          clipped: true
+      });            
+
+      var clippedGroup = new Group({
+          children: [clippedMask, rasterInit],
+          clipped: true
+      });      
+
+      clippedGroup.bringToFront(); 
+      edge.bringToFront();   
+      secondaryEdge.bringToFront(); 
+      ripTextures.bringToFront();
+      edgeRip.bringToFront();
+      
  
       // still need to close these to the edge
       // edge.insert(0, entryPoint);
@@ -223,9 +383,9 @@ rasterInit.on('load', function() {
       secondaryPath.addSegments(secondaryNewPath.segments);
       secondaryNewPath.remove();
 
-      joinPath = secondaryPath.clone();
-      joinPath.insert(0, newEntryPoint);
-      joinPath.add(newExitPoint);
+      // joinPath = secondaryPath.clone();
+      // joinPath.insert(0, newEntryPoint);
+      // joinPath.add(newExitPoint);
 
       edge.closed = true;
       secondaryEdge.closed = true;
@@ -238,88 +398,22 @@ rasterInit.on('load', function() {
 
     if (path.isInside(mask.bounds) === true) {
 
-      // var textureEdge = path.clone();
-      // textureEdge.strokeColor = 'hotpink';
-      // textureEdge.flatten(150);
-      // textureEdge.selected = true;
+      // var clipPath = path.clone();
+      // clipPath.join(joinPath);
 
-      var textures = new Group();
+      // var clippedMask = new Group({
+      //     children: [clipPath, mask],
+      //     clipped: true
+      // });            
 
-      //path length doesn't seem to be accurate when line is completed on mouseUp
-      var texturesNo = Math.round(path.length / 15);
+      // var clippedGroup = new Group({
+      //     children: [clippedMask, rasterInit],
+      //     clipped: true
+      // }); 
 
-      function drawSquares(path, texturesNo, primary) {
-        var i;
-
-        for (i = 0; i < texturesNo; i++) {
-          var location = path.getLocationAt(15*i);
-          var tangent = path.getTangentAt(location);
-
-
-          var marker = new Shape.Rectangle({
-            point: [(location.segment.point.x) - 20, (location.segment.point.y) - 20],
-            size: new Size(40, 40),
-            // strokeColor: 'hotpink'
-          })
-
-          function getRandomTileNo(max) {
-            min = Math.ceil(1);
-            max = Math.floor(max);
-            return Math.floor(Math.random() * (max - min + 1)) + min;
-          }
-
-          var tileUrl = '/img/textures/edge-tile-' + getRandomTileNo(3) + '.png';
-
-          var tile = new Raster({
-            source: tileUrl,
-            position: [(location.segment.point.x), (location.segment.point.y)],
-            size: new Size(40, 40),
-          });          
-
-          tile.scale(40/300);
-
-
-          if (primary === true) {
-            marker.rotate(tangent.angle);
-            tile.rotate(tangent.angle);
-          }
-          
-          else {
-            tile.rotation = 180;
-            marker.rotate(tangent.angle);
-            tile.rotate(tangent.angle);
-            console.log("right side");
-          }
-
-          textures.addChild(marker);
-          textures.addChild(tile);
-          
-          i++;
-
-        }
-
-      }
-
-      drawSquares(path, texturesNo, true);
-      drawSquares(secondaryPath, texturesNo, false);
-
-      var clipPath = path.clone();
-      clipPath.join(joinPath);
-
-      var clippedMask = new Group({
-          children: [clipPath, mask],
-          clipped: true
-      });            
-
-      var clippedGroup = new Group({
-          children: [clippedMask, rasterInit],
-          clipped: true
-      }); 
-
-      textures.bringToFront();
-      clippedGroup.bringToFront(); 
-      edge.bringToFront();   
-      secondaryEdge.bringToFront(); 
+      // clippedGroup.bringToFront(); 
+      // edge.bringToFront();   
+      // secondaryEdge.bringToFront(); 
 
 
       
