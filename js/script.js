@@ -86,8 +86,8 @@ rasterInit.on('load', function() {
   // tool.maxDistance = 20;
   tool.fixedDistance = 30;
 
-  var maxStripWidth = mask.bounds.width - 200;
-  var minStripWidth = (mask.bounds.width - 200)/2;
+  var maxStripWidth = mask.bounds.width - 250;
+  var minStripWidth = (mask.bounds.width - 250)/1.5;
 
   function getRandomInclusive(min, max) {
     min = Math.ceil(min);
