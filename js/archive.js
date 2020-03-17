@@ -57,34 +57,34 @@ var rasterInit = new Raster({
 rasterInit.on('load', function() {
   resizeImg(rasterInit);
 
-  //box for image mask
-  var mask = new Path.Rectangle({
-    position: view.center,
-    size: [rasterReveal.bounds.width, rasterReveal.bounds.height],
+//box for image mask
+var mask = new Path.Rectangle({
+  position: view.center,
+  size: [rasterReveal.bounds.width, rasterReveal.bounds.height],
 
-  });
+});
 
-  //box for shadow
-  var shadowClone = mask.clone();
-  shadowClone.style = {  
-    fillColor: 'white',
-    shadowColor: new Color(0, 0, 0, .5),
-    shadowBlur: 20,
-    shadowOffset: new Point(2, 6)
-  };
-  shadowClone.sendToBack();
+//box for shadow
+var shadowClone = mask.clone();
+shadowClone.style = {  
+  fillColor: 'white',
+  shadowColor: new Color(0, 0, 0, .5),
+  shadowBlur: 20,
+  shadowOffset: new Point(2, 6)
+};
+shadowClone.sendToBack();
 
 
-  var path;
-  var edge;
-  var edgeRip;
-  var secondaryPath;
-  var secondaryEdge;
-  var texturesAlt = new Group();
-  var ripTextures = new Group();
+var path;
+var edge;
+var edgeRip;
+var secondaryPath;
+var secondaryEdge;
+var texturesAlt = new Group();
+var ripTextures = new Group();
 
-  var dataLeft = 'M40.186,0 45.767,18.419 47.442,29.023 51.907,52.465 53.023,67.535 53.581,84.837 52.465,93.767 46.884,123.349 44.651,168 31.814,267.906 16.744,347.72 10.605,396.836 14.512,448.743 27.349,475.534 27.349,510.697 37.953,563.72 37.395,584.371 35.721,641.301 27.907,723.347 32.93,766.324 46.325,812.649 40.186,848.929 30.139,886.324 6.14,930.417 0,962.789 2.233,1021.951 8.93,1071.626 16.744,1119.626 34.605,1168.184 39.07,1199.439';
-  var dataRight = 'M129.776,-380.313 138.776,-268.313 138.776,-248.313 121.776,-195.313 103.776,-98.313 108.776,-26.313 113.776,34.687 128.776,86.687 148.776,216.687 159.776,340.687 173.776,371.687 173.776,392.687 143.776,493.687 124.776,576.687 118.776,662.687 131.776,710.687 155.776,772.687 162.776,819.687';
+var dataLeft = 'M40.186,0 45.767,18.419 47.442,29.023 51.907,52.465 53.023,67.535 53.581,84.837 52.465,93.767 46.884,123.349 44.651,168 31.814,267.906 16.744,347.72 10.605,396.836 14.512,448.743 27.349,475.534 27.349,510.697 37.953,563.72 37.395,584.371 35.721,641.301 27.907,723.347 32.93,766.324 46.325,812.649 40.186,848.929 30.139,886.324 6.14,930.417 0,962.789 2.233,1021.951 8.93,1071.626 16.744,1119.626 34.605,1168.184 39.07,1199.439';
+var dataRight = 'M129.776,-380.313 138.776,-268.313 138.776,-248.313 121.776,-195.313 103.776,-98.313 108.776,-26.313 113.776,34.687 128.776,86.687 148.776,216.687 159.776,340.687 173.776,371.687 173.776,392.687 143.776,493.687 124.776,576.687 118.776,662.687 131.776,710.687 155.776,772.687 162.776,819.687';
   
 
  
