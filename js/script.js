@@ -179,15 +179,11 @@ tool.onMouseDown = function(event) {
 
     rectHeight = event.point.y - mask.bounds.y;
 
-    console.log(mask);
-
     actionRect = new Path.Rectangle({
         point: [mask.bounds.x, mask.bounds.y],
         size: [mask.bounds.width, rectHeight],
         pivot: [mask.bounds.x, mask.bounds.y]
     });
-
-    console.log(actionRect.position);
 
     actionRect.bringToFront(); 
 
