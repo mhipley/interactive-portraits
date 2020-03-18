@@ -57,6 +57,8 @@ var rasterInit = new Raster({
 rasterInit.on('load', function() {
   resizeImg(rasterInit);
 
+var rasterClip = rasterInit.clone();
+
 //box for image mask
 var mask = new Path.Rectangle({
   position: view.center,
@@ -154,6 +156,8 @@ function drawPath(dataLeft, dataRight) {
 
 drawPath(dataLeft, dataRight);
 
+rasterClip.bringToFront();
+
 
 //beginning of mouse interactions
 tool.fixedDistance = 5;
@@ -171,23 +175,21 @@ tool.onMouseDown = function(event) {
 
     actionPath = new Path();
     actionPath.add(event.point);
-    actionPath.strokeColor = '#ff9900';
+    // actionPath.strokeColor = '#ff9900';
 
     rectHeight = event.point.y - mask.bounds.y;
 
     console.log(mask);
 
-    actionRect = new Shape.Rectangle({
+    actionRect = new Path.Rectangle({
         point: [mask.bounds.x, mask.bounds.y],
         size: [mask.bounds.width, rectHeight],
-        strokeColor: '#ff9900',
-        pivot: mask.position
+        pivot: [mask.bounds.x, mask.bounds.y]
     });
-    actionRect.selected = true;
 
-    console.log(actionRect);
+    console.log(actionRect.position);
 
-    actionRect.bringToFront();
+    actionRect.bringToFront(); 
 
     if (event.point.y >= rangeMin && event.point.y <= rangeMax) {
       console.log("point is inside the mask");
@@ -218,10 +220,19 @@ tool.onMouseDown = function(event) {
 
       rectHeight = event.point.y - mask.bounds.y;
 
-      actionRect.size = [mask.bounds.width, rectHeight];
+      var scale = rectHeight / actionRect.bounds.height;
+
+      actionRect.scale(1, scale, actionRect.pivot);
+
+      var clippingMask = mask.subtract(actionRect);
+      console.log(clippingMask);
 
 
-    
+      var clippedRaster = new Group({
+        children: [clippingMask, rasterClip],
+        clipped: true
+      });      
+
       
   }
 
