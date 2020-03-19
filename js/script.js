@@ -173,6 +173,19 @@ tool.onMouseDown = function(event) {
       actionPath.removeSegments();
     }
 
+    if (event.point.y < rangeMin) {
+      console.log("event.point is above the mask");
+
+    }
+
+    if (event.point.y > rangeMax) {
+      console.log("event.point is above the mask");
+
+    }
+
+
+
+
     actionPath = new Path();
     actionPath.add(event.point);
     // actionPath.strokeColor = '#ff9900';
@@ -188,7 +201,7 @@ tool.onMouseDown = function(event) {
     actionRect.bringToFront(); 
 
     if (event.point.y >= rangeMin && event.point.y <= rangeMax) {
-      console.log("point is inside the mask");
+      console.log("event.point is inside the mask");
       var zeroedPoint = new Point(midpoint, event.point.y);
       var entryPoint = mask.getNearestLocation(zeroedPoint);
       actionPath.insert(0, entryPoint);
@@ -196,199 +209,79 @@ tool.onMouseDown = function(event) {
 
     }
 
-    // var intersections = mask.getCrossings(path);
-
-    // if (intersections === undefined || intersections.length == 0){
-    //   var entryPoint = mask.getNearestLocation(event.point);
-    //   path.insert(0, entryPoint);
-    //   secondaryPath.insert(0, secondaryEntryPoint);
-    //   secondaryPath.insert(0, entryPoint);
-    // }
-
 }
 
 
 
   tool.onMouseDrag = function(event) {
       // Add a point to the path every time the mouse is dragged
+      if (event.point.y < rangeMin) {
+        console.log("event.point is above the mask");
 
-      actionPath.add(event.point);
+      }
 
-      rectHeight = event.point.y - mask.bounds.y;
-
-      var scale = rectHeight / actionRect.bounds.height;
-
-      actionRect.scale(1, scale, actionRect.pivot);
-
-      var clippingMask = mask.subtract(actionRect);
-      console.log(clippingMask);
+      if (event.point.y > rangeMax) {
+        console.log("event.point is above the mask");
 
 
-      var clippedRaster = new Group({
-        children: [clippingMask, rasterClip],
-        clipped: true
-      });      
+      }
+
+
+
+        // event.preventDefault();
+        actionPath.add(event.point);
+
+        actionPath.add(event.point);
+
+        rectHeight = event.point.y - mask.bounds.y;
+
+        var scale = rectHeight / actionRect.bounds.height;
+
+        actionRect.scale(1, scale, actionRect.pivot);
+
+        var clippingMask = mask.subtract(actionRect);
+
+
+        var clippedRaster = new Group({
+          children: [clippingMask, rasterClip],
+          clipped: true
+        });   
+
+      
 
       
   }
 
   tool.onMouseUp = function(event) {
 
-  //   var exitPoint = mask.getNearestLocation(event.point);
+    if (event.point.y >= rangeMin && event.point.y <= rangeMax) {
+      var zeroedPoint = new Point(midpoint, event.point.y);
+      var exitPoint = mask.getNearestLocation(zeroedPoint);
+    
+      actionPath.add(event.point);
+      actionPath.add(exitPoint);
 
-  //   var secondaryOut = event.point + offsetPoint;
+    }
 
-  //   var secondaryExitPoint = mask.getNearestLocation(secondaryOut);    
-  //   var intersections = mask.getCrossings(path);
+    else if (event.point.y > rangeMax) {
+      actionPath.add(event.point);
+    }
 
-  //   // path is entirely contained within mask bounds:
-  //   if (intersections === undefined || intersections.length == 0){
+    var endPoint = actionPath.lastSegment.point;
+  
+    rectHeight = endPoint.y - mask.bounds.y;
 
-  //     path.add(exitPoint);
+    var scale = rectHeight / actionRect.bounds.height;
 
-  //     secondaryPath.add(secondaryExitPoint);
+    actionRect.scale(1, scale, actionRect.pivot);
 
-  //     var clipPath = path.clone();
-  //     var joinPath = secondaryPath.clone();
-  //     clipPath.join(joinPath);
-
-  //     var clippedMask = new Group({
-  //         children: [clipPath, mask],
-  //         clipped: true
-  //     });            
-
-  //     var clippedGroup = new Group({
-  //         children: [clippedMask, rasterInit],
-  //         clipped: true
-  //     });      
-
-  //     clippedGroup.bringToFront(); 
-  //     edge.bringToFront();   
-  //     secondaryEdge.bringToFront(); 
-  //     ripTextures.bringToFront();
-  //     edgeRip.bringToFront();
-      
- 
-  //     // still need to close these to the edge
-  //     // edge.insert(0, entryPoint);
-  //     edge.add(exitPoint);
-  //     edge.closed = true;
-
-  //     // secondaryEdge.insert(0, secondaryEntryPoint);
-  //     secondaryEdge.add(secondaryExitPoint);
-  //     secondaryEdge.closed = true;
-  //     // edge.smooth();
-
-  //   }
-
-  //   // if path begins or ends outside of the mask bounds
-  //   else{
-  //     newPath = path.intersect(mask, {trace: false});
-  //     secondaryNewPath = secondaryPath.intersect(mask, {trace: false});
-
-  //     var newEntryPoint = mask.getNearestLocation(newPath.firstSegment.point);
-  //     var newExitPoint = mask.getNearestLocation(newPath.lastSegment.point);     
-
-  //     var newSecondaryEntryPoint = mask.getNearestLocation(secondaryNewPath.firstSegment.point);
-  //     var newSecondayExitPoint = mask.getNearestLocation(secondaryNewPath.lastSegment.point);     
-
-  //     newPath.insert(0, newEntryPoint);
-  //     newPath.add(newExitPoint);
-
-  //     secondaryNewPath.insert(0, newSecondaryEntryPoint);
-  //     secondaryNewPath.add(newSecondayExitPoint);
-
-  //     path.removeSegments();
-  //     path.addSegments(newPath.segments);
-  //     newPath.remove();
-
-  //     secondaryPath.removeSegments();
-  //     secondaryPath.addSegments(secondaryNewPath.segments);
-  //     secondaryNewPath.remove();
-
-  //     // joinPath = secondaryPath.clone();
-  //     // joinPath.insert(0, newEntryPoint);
-  //     // joinPath.add(newExitPoint);
-
-  //     edge.closed = true;
-  //     secondaryEdge.closed = true;
-  //     // edge.smooth();
+    var clippingMask = mask.subtract(actionRect);
 
 
-  //   }
-
-
-
-  //   if (path.isInside(mask.bounds) === true) {
-
-  //     // var clipPath = path.clone();
-  //     // clipPath.join(joinPath);
-
-  //     // var clippedMask = new Group({
-  //     //     children: [clipPath, mask],
-  //     //     clipped: true
-  //     // });            
-
-  //     // var clippedGroup = new Group({
-  //     //     children: [clippedMask, rasterInit],
-  //     //     clipped: true
-  //     // }); 
-
-  //     // clippedGroup.bringToFront(); 
-  //     // edge.bringToFront();   
-  //     // secondaryEdge.bringToFront(); 
-
-
-      
-      
-  //     // var boundingIntersections = mask.getIntersections(path);
-  //     // var secondaryBoundingIntersections = mask.getIntersections(secondaryPath);
-
-  //     // var splitLocation = mask.getNearestLocation(boundingIntersections[0].point);
-  //     // var locationB = mask.getNearestLocation(boundingIntersections[1].point);
-
-  //     // var secondarySplitLocation = mask.getNearestLocation(secondaryBoundingIntersections[0].point);
-
-  //     // console.log(boundingIntersections);
-  //     // console.log(secondaryBoundingIntersections);
-  //     // console.log(splitLocation);
-  //     // console.log(secondarySplitLocation);
-  //     // var secondaryLocationB = mask.getNearestLocation(secondaryBoundingIntersections[1].point);
-
-  //     // var pathB = path.clone();
-
-  //     // mask.splitAt(splitLocation);
-  //     // boundB = mask.splitAt(locationB);
-
-  //     // mask.join(path);
-  //     // boundB.join(pathB);
-
-  //     // var initClone = rasterInit.clone();
-
-  //     // var groupA = new Group({
-  //     //     children: [mask, rasterInit],
-  //     //     clipped: true
-  //     // });
-
-  //     // var groupB = new Group({
-  //     //     children: [boundB, initClone],
-  //     //     clipped: true          
-  //     // });  
-
-  //     // textures.bringToFront();
-  //     // groupA.bringToFront();
-  //     // edge.bringToFront();
-      
-  //     // groupB.bringToFront();
-
-
-  //   }
-
-  //   else {
-  //     path.removeSegments();
-  //     secondaryPath.removeSegments();
-  //   }
-
+    var clippedRaster = new Group({
+      children: [clippingMask, rasterClip],
+      clipped: true
+    });    
 
 
    }
